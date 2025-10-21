@@ -1,0 +1,191 @@
+---
+title: "10x scRNA-seq Seurat Analysis"
+author: "PRIME (by2747@stowers.org)"
+output:
+  html_document:
+    code_folding: hide
+    prettydoc::html_pretty:
+      theme: leonids
+      toc: yes
+params:
+  Reference_mito_list: null
+---
+
+``` {r setup, echo=FALSE, message=FALSE, results="hide", warning=FALSE}
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(pander)
+library(knitr)
+library(rmarkdown)
+library(ggplot2)
+
+library(rmdformats)
+library(prettydoc)
+library(hrbrthemes)
+library(tint)
+library(tufte)
+
+panderOptions('table.style','rmarkdown')
+panderOptions('table.split.table',Inf)
+
+
+options(width=50)
+opts_chunk$set(error=FALSE)
+opts_chunk$set(echo=FALSE)
+opts_chunk$set(tidy=FALSE)
+opts_chunk$set(warnings=FALSE)
+```
+
+## Method 
+* [Cellranger](https://www.10xgenomics.com/support/software/cell-ranger/latest) count version 8.0.1 was used in the initial single cell analysis of the samples. </br>
+* [CellBender](https://www.nature.com/articles/s41592-023-01943-7) version 0.3.0 were used on h5 files output by Cellranger for further denoising. </br>
+* [Seurat](https://satijalab.org/seurat/) version 5.1.0 was used for data filteration, normalization, and single cell analysis. </br>
+
+
+## Data QC
+</br>
+
+Feature violin plots 
+```{r QCplot-violin, echo=TRUE, warning=FALSE, message=FALSE, fig.width=12, fig.height=6,fig.path='Seurat_Report_gen_plots/'}
+SC_cellbender_OutDir <- "./"
+SC_10X_cellBenderH5.filteredSeurat <- paste0(SC_cellbender_OutDir, "cellbender_output_filtered_seurat.h5")
+
+SC_10X.data <- Read10X_h5(SC_10X_cellBenderH5.filteredSeurat)
+SC_10X <- CreateSeuratObject(counts = SC_10X.data, project = "10X", min.cells = 3, min.features = 200)
+num_cells_preFilter <- length(SC_10X@meta.data$nCount_RNA)
+
+#Check the mt gene list and select mt features based on said list
+mt_file <- params$Reference_mito_list
+if (is.null(mt_file)) {
+  stop("Error: The mt gene list is NULL. Stopping the rmarkdown process.")
+}
+mt_gene_list <- readLines(mt_file)
+mt_gene_list_inter <- intersect(mt_gene_list, rownames(SC_10X)) #Make sure that mt genes are present in the SC obj
+SC_10X[["percent.mt"]] <- PercentageFeatureSet(SC_10X, features = mt_gene_list_inter)
+
+#Visualize QC metrics as a violin plot and scatter plot
+VlnPlot(SC_10X, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+
+```
+
+Feature scatter plot
+```{r QCplot-scatter, echo=TRUE, warning=FALSE, message=FALSE, fig.width=12, fig.height=6, fig.path='Seurat_Report_gen_plots/'}
+plot1 <- FeatureScatter(SC_10X, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(SC_10X, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+```
+
+## Data filtering and normalization 
+Cells with nFeature_RNA greater than 200 and with less than 10% mitochondria counts were selected for further processing. Code can be visualized below: 
+
+```{r filtering, echo=TRUE, warning=FALSE, message=FALSE }
+SC_10X <- subset(SC_10X, subset = nFeature_RNA > 200 & percent.mt < 10)
+```
+
+After removing unwanted cells from the dataset, the next step is to normalize the data. SCTransform was used here for data normalization. Code can be visualized below:
+
+```{r nomorlize, echo=TRUE, warning=FALSE, message=FALSE }
+# SC_10X <- NormalizeData(SC_10X, normalization.method = "LogNormalize", scale.factor = 10000)
+SC_10X <- SCTransform(SC_10X, vars.to.regress = "percent.mt", verbose = FALSE)
+num_cells_postFilter <- length(SC_10X@meta.data$nCount_RNA)
+
+```
+
+*After data filtering and normalization, the total number of cells within the dataset changed from `r num_cells_preFilter` to `r num_cells_postFilter`* </br>
+
+## Cluster Analysis
+
+To help determine the ‘dimensionality’ of the dataset, we calcualted the PCA of the data, and from the results generated an ‘Elbow plot’. 
+ndim of 30 was picked for further analysis (red line), as we believe this value can better explain the majority of the data.  
+
+```{r dimension-elbow, echo=TRUE, warning=FALSE, message=FALSE, fig.width=11, fig.height=6, fig.path='Seurat_Report_gen_plots/'}
+
+SC_10X <- RunPCA(SC_10X, verbose = FALSE, npcs=100)
+
+# Create Elbow plot using ggplot2
+ElbowPlot(SC_10X, ndims = 100) + geom_vline(xintercept=30,color="red")
+
+```
+```{r BioTools-BiotoolsElbow, echo=FALSE, warning=FALSE, message=FALSE}
+plot_U <- ElbowPlot(SC_10X, ndims = 80) + theme(axis.title=element_text(size=17,face="bold"), axis.text=element_text(size=15)) + geom_vline(xintercept=30,color="red")
+ggsave(filename = "Seurat_Report_gen_plots/BioTool-dimension-elbow.png", plot = plot_U, width = 8, height = 8, dpi = 500 )
+```
+
+Next we perform UMAP embedding on the normalized (SCTransform) data. A dimPlot is shown below for reference using dim 1:30, and a default resolution of 0.5. 
+
+```{r scalling_PCA, echo=TRUE, warning=FALSE, message=FALSE, fig.width=11, fig.height=8, fig.path='Seurat_Report_gen_plots/'}
+all.genes <- rownames(SC_10X)
+# SC_10X <- ScaleData(SC_10X, features = all.genes)
+
+SC_10X <- RunUMAP(SC_10X, dims = 1:30, verbose = FALSE)
+
+SC_10X <- FindNeighbors(SC_10X, dims = 1:30, verbose = FALSE)
+SC_10X <- FindClusters(SC_10X, verbose = FALSE, resolution = 0.5) 
+
+DimPlot(SC_10X, label = TRUE)
+```
+
+```{r BioTools-BiotoolsUMAP, echo=FALSE, warning=FALSE, message=FALSE}
+plot_U <- DimPlot(SC_10X, label = TRUE) + theme(axis.title=element_text(size=17,face="bold"), axis.text=element_text(size=15))
+ggsave(filename = "Seurat_Report_gen_plots/BioTool-UMAP.png", plot = plot_U, width = 8, height = 8, dpi = 500 )
+```
+
+## Find Marker genes
+
+Seurat can help you find markers that define clusters via differential expression (DE). In this initial analysis, we chose to identify positive markers - genes that are expressed higher in a given cluster than in the rest of the data. </br>
+
+```{r findMarkers, echo=TRUE, warning=FALSE, message=FALSE}
+SC_10X.markers <- FindAllMarkers(SC_10X, only.pos = TRUE, logfc.threshold = 0.5)
+SC_10X.markers <- SC_10X.markers %>% filter(p_val_adj < 0.1)
+
+write.csv(SC_10X.markers, 'Seurat_Report_gen_plots/AllMarkers.csv')
+cwd <- getwd()
+url <- paste0("https://webfs/", cwd, "/../PRIME_SC_out/Seurat_Report_gen_plots/AllMarkers.csv")
+```
+Using DoHeatmap(), we are plotting the top 5 markers (or all markers if less than 5) for each cluster (log2FC > 0.5 & adjusted Pvalue < 0.1  were applied for marker selection).</br>
+</br>
+Table for all marker genes can be downloaded [AllMarkers.csv](`r url`)
+
+```{r markers-heatmap, echo=TRUE, warning=FALSE, message=FALSE, fig.width=10, fig.height=12, fig.path='Seurat_Report_gen_plots/'}
+SC_10X.markers %>%
+    group_by(cluster) %>%
+    # dplyr::filter(avg_log2FC > 1) %>%
+    slice_head(n = 5) %>%
+    ungroup() -> top5
+DoHeatmap(SC_10X, features = top5$gene) + NoLegend()
+```
+We also plotted the markers above into a dotplot using DotPlot()
+```{r markers-dotplot, echo=TRUE, warning=FALSE, message=FALSE, fig.width=14, fig.height=12, fig.path='Seurat_Report_gen_plots/'}
+features <- unique(top5$gene) # Dotplot can not have duplicates in the levels of features
+
+DotPlot(object = SC_10X, features = features) +
+  # theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  ylab("Cluster") +
+  coord_flip()
+  
+url <- paste0("https://webfs/", cwd, "/../PRIME_SC_out/SeuratObj.rds")
+PRIME_SC_out_folder <- paste0("https://webfs/", cwd, "/../PRIME_SC_out")
+```
+
+## Data Download
+**Seurat object saved to Prime_SC_Analysis/ folder under [SeuratObj.rds](`r url`)** </br>
+**Additional Seurat analysis outputs can be found in this folder here [PRIME_SC_out](`r PRIME_SC_out_folder`)**
+
+```{r save, echo=TRUE, warning=FALSE, message=FALSE }
+saveRDS(SC_10X, file = "SeuratObj.rds")
+``` 
+
+###  Session information
+
+**Author:** PRIME **Bowen Yang (by2747@stowers.org)******
+
+**Contact:** Please email helpCompbio@stowers.org if you have any questions or suggestions.
+
+**Generated:** `r format(Sys.time(), "%a %b %d %Y, %I:%M %p")`
+
+For reproducibility, see session info below:
+
+``` {r session_info, echo=FALSE, comment=NA}
+sessionInfo()
+```

@@ -1,0 +1,15 @@
+input:
+  bulk_fastq_dir: "tests/data/bulkRNA"
+  single_cell_fastq_dir: "tests/data/SCRNA"
+
+params:
+  fcid_bulk: "2447555720"
+  fcid_single_cell: "AAGCKV5M5"
+  machine: "NextSeq2K"
+
+
+expected:
+  bulk_rnaseq_files:
+    - "/n/analysis/Si/kl2481/MOLNG-4437/2447555720/multiqc.html"
+  single_cell_rnaseq_files:
+    - "/n/core/Bioinformatics/secondary//Sequencing/kp2312/MOLNG-4050.GRCm39.Ens_110/analysis_10xscRNASeq.html"
