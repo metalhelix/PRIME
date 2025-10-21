@@ -128,7 +128,7 @@ def new_fc_pipeline_run(logfile, copy_complete_txt_name, data_folder, machine_ty
                     --fcid {fc} --fcpath {fc_dict[fc]['fc_path']} --machine_type {machine_type} --run_type RNA-Seq {only_fastq} > \
                     /n/ngs/tools/PRIME/logs/machine_run_logs/{fc}.{machine_type}.nf.log"
             
-            start_email = f"mail -s 'Flowcell: {fc}; Order Type: {fc_dict[fc]['orderType']}; Machine: {machine_type}; PRIME execution STARTED' -r bioinfo@stowers.org bioinfo@stowers.org,mpe@stowers.org,hhassan@stowers.org,mcm@stowers.org,dw2733@stowers.org"
+            start_email = f"mail -s 'Flowcell: {fc}; Order Type: {fc_dict[fc]['orderType']}; Machine: {machine_type}; PRIME execution STARTED' -r bioinfo@stowers.org bioinfo@stowers.org,mpe@stowers.org,hhassan@stowers.org,mcm@stowers.org"
             call(start_email, shell=True)
             print(cmd)
             return_code = call(cmd, shell=True)

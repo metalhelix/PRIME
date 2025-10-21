@@ -15,7 +15,7 @@ workflow NX2K_RNASEQ {
     nx2k_samplesheet_create(lims_info_csv)
     // Check Fastq origin
     if (!params.fastq_dir) {
-         bclconvert(nx2k_samplesheet_create.out)
+        bclconvert(nx2k_samplesheet_create.out)
         fastq_dir = bclconvert.out
     } else {
         fastq_dir = params.fastq_dir

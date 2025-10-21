@@ -38,7 +38,7 @@ process copy_fastqs {
 process bowtie2_fastqc {
     // No need to worry about slum resources, i have specified them in the config just for this process 
     
-    // conda "${projectDir}/assets/fqc_bt2_condaEnv.yml"
+    conda "${projectDir}/assets/fqc_bt2_condaEnv.yml"
     // conda "/home/by2747/miniconda3/envs/fqc_bt2"
 
     input:
@@ -59,9 +59,6 @@ process bowtie2_fastqc {
     file("${driver.nanalysis_path}/fastqc").mkdirs()
 
     """
-    ml bowtie2
-    ml fastqc
-    
     bowtie2 --threads 5 -x ${params.indexDir}/${driver.refSpecies}/${driver.refGenome}/bowtie2/${driver.refGenome} -U ${driver.fastq} 2> ${driver.file_name}.log | samtools view -Sbh -o ${driver.file_name}.bam &
 
     fastqc -t 10 ${driver.fastq} -o ./  --quiet &
@@ -87,7 +84,6 @@ process bam_stats {
 
     script:
     """
-    ml bamtools
     bamtools stats -in ${bt2Bam} > ${driver.file_name}_bamstats.txt
     """
 }
@@ -106,7 +102,6 @@ process flagstat {
 
     script:
     """
-    ml samtools
     samtools flagstat ${bt2Bam} -@ 4 > ${driver.file_name}_flagstat.tsv
     """
 }
