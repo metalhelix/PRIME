@@ -60,5 +60,15 @@ Command:
 ## Run Environment
 PRIME is running within a conda environment stored here: /home/compbio_svc/miniconda3/envs/PrimeG4 
 
+---
+
+## Log Files
+
+Log files for PRIME are stored under /n/ngs/tools/PRIME/logs
+- CronJob.log : Direct output of the CronJob script
+- PRIME_Orders.log : Orders that were detected in previous runs with time stamps
+- machine_run_logs/ : Outputs of the pipeline per flowcell
+
+---
 
 
