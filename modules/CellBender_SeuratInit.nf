@@ -1,7 +1,7 @@
 process cellbender {
     label 'gpu'
     // conda "${projectDir}/env/cellbender.yml"
-    conda "/home/compbio_svc/miniconda3/envs/cellbender"
+    conda "/home/by2747/miniconda3/envs/cellbender"
 
     input:
     tuple val(secondary_path), val(orderType), path(cellranger_outs), val(output_lib_folder), val(meta)
@@ -28,7 +28,7 @@ process cellbender {
 process seurat_report {
     label 'big_mem'
     // conda "${projectDir}/env/SC_PRIME.yml"
-    conda "/home/compbio_svc/miniconda3/envs/SC_PRIME"
+    conda "/home/by2747/miniconda3/envs/SC_PRIME"
 
     input:
     tuple val(secondary_path), val(orderType), val(output_lib_folder), val(meta), val(cellbender_output_h5file)

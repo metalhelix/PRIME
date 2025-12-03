@@ -1,0 +1,2 @@
+Output,Order,OrderType,SampleName,LibraryID,IndexSequence1,IndexSequence2,Read,Reference,Lab,TotalReads,AlignPercent,Type,ReadLength,Species,FastqPath
+L76759-4.bam,MOLNG-4340,PacBio,flykinnexatlas,L76759-4,bcM0001,NA,NA,BDGP6.46,Ozel Lab,NA,NA,Revio,NA,Drosophila melanogaster,/n/analysis/Ozel/cml/MOLNG-4340/EA227196/L76759-4.bam
