@@ -20,7 +20,7 @@ def system_call(command: list) -> tuple:
         success = False
     return output, success
 
-NGS_LIMS = 'https://lims.stowers.org/zanmodules/molecular-biology/ngs'
+NGS_LIMS = 'http://lims.stowers.org/zanmodules/molecular-biology/ngs'
 API_TOKEN = 'ca7952666a03dd4e59d0cd59e39fecc7'
 requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS = 'ALL:@SECLEVEL=1'
 

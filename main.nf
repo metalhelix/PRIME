@@ -113,5 +113,5 @@ workflow.onComplete {
         .stripIndent()
     
     println msg 
-    sendMail(to: 'by2747@stowers.org', subject: "${params.fcid} PRIME pipeline execution", body: msg)
+    sendMail(to: 'by2747@stowers.org', cc:'mpe@stowers.org,hhassan@stowers.org,mcm@stowers.org,dw2733@stowers.org', subject: "${params.fcid} PRIME pipeline execution", body: msg)
 }

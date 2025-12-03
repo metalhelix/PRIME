@@ -1,6 +1,8 @@
 process copy_all_files {
     label 'small_mem'
-
+    errorStrategy 'retry'
+    maxRetries 3
+    
     input:
     val meta
 
@@ -12,6 +14,8 @@ process copy_all_files {
     mkdir -p ${meta.nanalysis_path}
 
     rsync ${meta.bam_path} ${meta.nanalysis_path}/${meta.libID}.bam
+    rsync ${meta.bam_path}.pbi ${meta.nanalysis_path}/${meta.libID}.bam.pbi
+
     rsync ${meta.qcReport} ${meta.nanalysis_path}/SMRT_QCReport.pdf
 
     rsync -a --ignore-existing ${meta.fcpath}/fail_reads ${meta.nanalysis_path}
@@ -35,8 +39,6 @@ process pacbio_samplereport {
 
     script:
     """
-    ml python/3.11.5
-
     Sample_Report_PacBio.py --input ${samplesheet_pacbio}
     """
 }

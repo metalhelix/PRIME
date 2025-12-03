@@ -24,8 +24,6 @@ process samplesheet_make_pacBio {
 
     script:
     """
-    ml python/3.11.5 
-
     pacbio_metaData_reader.py --xml ${pacbio_xml}
     """
 }
