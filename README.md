@@ -52,9 +52,17 @@ When adding a new workflow or order type, I would still recommend writing new pr
 
 CronJobs are used to automatically kick off prime.
 CronJobs are ran under the compbio_svc account. 
-Command: 
+There are two cronjob scripts: 
+- CronJobRunner_PRIME_v4.py : for Illumina based PRIME orders
+- CronJobRunner_PacBio.py : for PacBio based PRIME orders
+
+The cronjob entries are as follows:
+
+```
 49 * * * * ~/miniconda3/envs/R-SECUNDO3/bin/python /n/ngs/tools/PRIME/RUN/scripts/CronJobRunner_PRIME_v4.py --samplesheet /n/analysis/genomes/sampleSheet_ROBOINDEX_2023.csv >> /n/ngs/tools/PRIME/logs/CronJob.log 2>&1
 
+40 * * * * /home/compbio_svc/miniconda3/envs/SC_PRIME/bin/python /n/ngs/tools/PRIME/RUN/scripts/CronJobRunner_PacBio.py >> /n/ngs/tools/PRIME/logs/CronJob.log 2>&1
+```
 --- 
 
 ## Run Environment
