@@ -25,7 +25,6 @@ def check_log(xml_paths: list, logfile): # log the whole path of the metadata.xm
                 if xml in line:
                     seen_key.append(xml)
     xml_dict = {val for val in xml_paths if val not in seen_key}
-    print(xml_dict)
     return xml_dict
 
 def new_fc_pipeline_run(logfile, data_folder):
