@@ -1,3 +1,0 @@
-Note:
-  - Use Pytest to run tests: `pytest -v`
-  - Download testing data (/n/ngs/tools/PRIME/PRIME_v2.5.3/test/data) to test/data directory before running tests.
